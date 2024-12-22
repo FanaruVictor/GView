@@ -215,5 +215,44 @@ namespace Panels
                   Reference<GView::Object> _object, std::string_view name, std::string_view layout, LinkType type, const PacketHeader* packet, int32 _base);
         };
     };
+
+    class FtpDetails : public AppCUI::Controls::TabPage
+	{
+		Reference<Object> object;                     // Reference to the object being inspected
+		Reference<GView::Type::PCAP::PCAPFile> pcap;   // Reference to the PCAP file
+		Reference<AppCUI::Controls::ListView> details; // ListView for detailed information
+
+		// Predefined numeric formats
+		inline static const auto dec       = NumericFormat{ NumericFormatFlags::None, 10, 3, ',' };
+		inline static const auto hexUint32 = NumericFormat{ NumericFormatFlags::HexPrefix, 16, 0, ' ', 4 };
+		inline static const auto hexUint64 = NumericFormat{ NumericFormatFlags::HexPrefix, 16, 0, ' ', 8 };
+
+		void UpdateFtpDetailsInformation();
+		void RecomputePanelsPositions();
+
+		// Add a decimal and hexadecimal representation of a value
+		template <typename T>
+		ListViewItem AddDecAndHexElement(std::string_view name, std::string_view format, T value)
+		{
+			LocalString<1024> ls;
+			NumericFormatter nf;
+			NumericFormatter nf2;
+
+			static const auto hexBySize = NumericFormat{ NumericFormatFlags::HexPrefix, 16, 0, ' ', sizeof(T) * 2 };
+
+			const auto v    = nf.ToString(value, dec);
+			const auto vHex = nf2.ToString(value, hexBySize);
+			return details->AddItem({ name, ls.Format(format.data(), v.data(), vHex.data()) });
+		}
+
+	public:
+		FtpDetails(Reference<Object> _object, Reference<GView::Type::PCAP::PCAPFile> _pcap);
+
+		void Update();
+		virtual void OnAfterResize(int newWidth, int newHeight) override
+		{
+			RecomputePanelsPositions();
+		}
+	};
 }; // namespace Panels
 } // namespace GView::Type::PCAP

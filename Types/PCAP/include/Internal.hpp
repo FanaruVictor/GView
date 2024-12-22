@@ -2095,5 +2095,4 @@ class StreamManager
         return res;
     }
 };
-
 } // namespace GView::Type::PCAP
